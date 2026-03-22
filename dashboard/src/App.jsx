@@ -7,6 +7,69 @@ import {
   Bot, Loader2, ArrowUpRight, ArrowDownRight, Zap, Power, RefreshCw,
 } from 'lucide-react';
 
+// ─── Markdown renderer (lightweight, no deps) ──────────────────────
+
+function renderMarkdown(text) {
+  if (!text) return null;
+  const lines = text.split('\n');
+  const elements = [];
+  let listItems = [];
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      elements.push(<ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-0.5 my-1">{listItems}</ul>);
+      listItems = [];
+    }
+  };
+
+  const inlineFormat = (str, key) => {
+    const parts = [];
+    let remaining = str;
+    let idx = 0;
+    // Bold
+    remaining = remaining.replace(/\*\*(.+?)\*\*/g, (_, m) => `<b>${m}</b>`);
+    // Inline code
+    remaining = remaining.replace(/`([^`]+)`/g, (_, m) => `<code class="bg-surface-3 text-accent-bright px-1 py-0.5 rounded text-xs">${m}</code>`);
+    return <span key={key} dangerouslySetInnerHTML={{ __html: remaining }} />;
+  };
+
+  lines.forEach((line, i) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushList();
+      return;
+    }
+    // Headers
+    if (trimmed.startsWith('### ')) {
+      flushList();
+      elements.push(<p key={i} className="font-semibold text-zinc-200 mt-2 mb-0.5 text-xs uppercase tracking-wide">{inlineFormat(trimmed.slice(4), `h3-${i}`)}</p>);
+    } else if (trimmed.startsWith('## ')) {
+      flushList();
+      elements.push(<p key={i} className="font-semibold text-zinc-100 mt-2 mb-0.5">{inlineFormat(trimmed.slice(3), `h2-${i}`)}</p>);
+    } else if (trimmed.startsWith('# ')) {
+      flushList();
+      elements.push(<p key={i} className="font-bold text-zinc-100 mt-2 mb-1">{inlineFormat(trimmed.slice(2), `h1-${i}`)}</p>);
+    }
+    // Numbered list
+    else if (/^\d+\.\s/.test(trimmed)) {
+      const content = trimmed.replace(/^\d+\.\s/, '');
+      listItems.push(<li key={i} className="text-zinc-300">{inlineFormat(content, `li-${i}`)}</li>);
+    }
+    // Bullet list
+    else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      const content = trimmed.slice(2);
+      listItems.push(<li key={i} className="text-zinc-300">{inlineFormat(content, `li-${i}`)}</li>);
+    }
+    // Normal paragraph
+    else {
+      flushList();
+      elements.push(<p key={i} className="text-zinc-300">{inlineFormat(trimmed, `p-${i}`)}</p>);
+    }
+  });
+  flushList();
+  return <div className="space-y-1">{elements}</div>;
+}
+
 // ─── Hooks ──────────────────────────────────────────────────────────
 
 function usePolling(fetcher, intervalMs = 4000) {
@@ -111,7 +174,7 @@ function ChatPanel() {
                 ? 'bg-accent/15 text-accent-bright rounded-br-md'
                 : 'bg-surface-2 text-zinc-300 rounded-bl-md border border-surface-3'
             }`}>
-              <p className="whitespace-pre-wrap">{m.content}</p>
+              {m.role === 'ai' ? renderMarkdown(m.content) : <p className="whitespace-pre-wrap">{m.content}</p>}
               {m.tools > 0 && <p className="text-[10px] text-zinc-500 mt-1">{m.tools} tool calls</p>}
             </div>
           </div>
