@@ -88,8 +88,8 @@ async def _autonomous_tick():
         tick_results.append({"type": "github_scan", "result": result["response"][:300]})
         audit_log.log("AUTONOMOUS_GITHUB_SCAN", {"tool_calls": result["tool_calls"]})
 
-    # 3. Treasury yield management — check if idle USDT should go to Aave
-    if agent_ref["tick_count"] % 5 == 0:  # every 5th tick
+    # 3. Treasury yield management — check if idle USDT should go to Aave (every 10th tick)
+    if agent_ref["tick_count"] % 10 == 0:
         prompt = (
             "Check the treasury USDT balance on Polygon. If the balance is significantly above "
             "the minimum reserve (more than 2x the min_balance policy), consider supplying the "

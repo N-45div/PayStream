@@ -67,7 +67,7 @@ function renderMarkdown(text) {
     }
   });
   flushList();
-  return <div className="space-y-1">{elements}</div>;
+  return <div className="space-y-1 break-words" style={{ overflowWrap: 'anywhere' }}>{elements}</div>;
 }
 
 // ─── Hooks ──────────────────────────────────────────────────────────
@@ -169,12 +169,12 @@ function ChatPanel() {
         )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed overflow-hidden break-words ${
               m.role === 'user'
                 ? 'bg-accent/15 text-accent-bright rounded-br-md'
                 : 'bg-surface-2 text-zinc-300 rounded-bl-md border border-surface-3'
             }`}>
-              {m.role === 'ai' ? renderMarkdown(m.content) : <p className="whitespace-pre-wrap">{m.content}</p>}
+              {m.role === 'ai' ? renderMarkdown(m.content) : <p className="whitespace-pre-wrap break-words">{m.content}</p>}
               {m.tools > 0 && <p className="text-[10px] text-zinc-500 mt-1">{m.tools} tool calls</p>}
             </div>
           </div>
@@ -438,14 +438,14 @@ function AutonomousPanel() {
           <div className="mt-3 space-y-1.5">
             <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Last Tick Activity</p>
             {data.last_tick_result.results.map((r, i) => (
-              <div key={i} className="bg-surface-2 border border-surface-3 rounded-lg px-3 py-2">
+              <div key={i} className="bg-surface-2 border border-surface-3 rounded-lg px-3 py-2 overflow-hidden">
                 <div className="flex items-center gap-2">
                   <Badge color={r.type === 'github_scan' ? 'info' : r.type === 'yield_management' ? 'warn' : 'accent'}>
                     {r.type.replace('_', ' ')}
                   </Badge>
                   {r.amount && <span className="text-[11px] text-zinc-300">${r.amount.toFixed(2)}</span>}
                 </div>
-                <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">{r.result}</p>
+                <p className="text-[11px] text-zinc-400 mt-1 line-clamp-3 break-words" style={{ overflowWrap: 'anywhere' }}>{r.result}</p>
               </div>
             ))}
           </div>
