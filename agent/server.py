@@ -80,7 +80,7 @@ async def _autonomous_tick():
                     f"After sending, report the transaction hash."
                 )
                 result = await _agent_invoke(prompt)
-                tick_results.append({"type": "stream_payment", "stream_id": s.id, "amount": due, "result": result["response"][:200]})
+                tick_results.append({"type": "stream_payment", "stream_id": s.id, "amount": due, "result": result["response"], "tool_calls": result["tool_calls"]})
                 audit_log.log("AUTONOMOUS_STREAM_TICK", {"stream_id": s.id, "due": due})
 
     # 2. Check GitHub for new merged PRs (if configured)
@@ -94,7 +94,7 @@ async def _autonomous_tick():
             f"Report what you did for each PR."
         )
         result = await _agent_invoke(prompt)
-        tick_results.append({"type": "github_scan", "result": result["response"][:300]})
+        tick_results.append({"type": "github_scan", "result": result["response"], "tool_calls": result["tool_calls"]})
         audit_log.log("AUTONOMOUS_GITHUB_SCAN", {"tool_calls": result["tool_calls"]})
 
     # 3. Treasury yield management — check if idle USDT should go to Aave (every 10th tick)
@@ -107,7 +107,7 @@ async def _autonomous_tick():
             "Report your decision and reasoning."
         )
         result = await _agent_invoke(prompt)
-        tick_results.append({"type": "yield_management", "result": result["response"][:200]})
+        tick_results.append({"type": "yield_management", "result": result["response"], "tool_calls": result["tool_calls"]})
         audit_log.log("AUTONOMOUS_YIELD_CHECK", {"tool_calls": result["tool_calls"]})
 
     return tick_results

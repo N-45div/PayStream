@@ -387,6 +387,38 @@ function AuditPanel() {
   );
 }
 
+function TickResultCard({ r }) {
+  const [expanded, setExpanded] = useState(false);
+  const colorMap = { github_scan: 'info', yield_management: 'warn', stream_payment: 'accent' };
+  const iconMap = { github_scan: Activity, yield_management: Wallet, stream_payment: CircleDollarSign };
+  const Icon = iconMap[r.type] || Zap;
+
+  return (
+    <div className="bg-surface-2 border border-surface-3 rounded-lg overflow-hidden">
+      <button onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-3/50 transition-colors text-left">
+        <Icon className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+        <Badge color={colorMap[r.type] || 'accent'}>{r.type.replace(/_/g, ' ')}</Badge>
+        {r.amount != null && <span className="text-[11px] text-zinc-300">${r.amount.toFixed(2)}</span>}
+        {r.tool_calls > 0 && <span className="text-[10px] text-zinc-500">{r.tool_calls} tools</span>}
+        <ChevronRight className={`w-3 h-3 text-zinc-500 ml-auto shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+      </button>
+      {expanded && (
+        <div className="px-3 pb-3 pt-1 border-t border-surface-3">
+          <div className="text-[12px] text-zinc-300 leading-relaxed max-h-64 overflow-y-auto" style={{ overflowWrap: 'anywhere' }}>
+            {renderMarkdown(r.result)}
+          </div>
+        </div>
+      )}
+      {!expanded && r.result && (
+        <div className="px-3 pb-2">
+          <p className="text-[11px] text-zinc-500 truncate">{r.result.split('\n')[0]}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AutonomousPanel() {
   const [data, refresh] = usePolling(api.getAutonomous, 3000);
   const [triggering, setTriggering] = useState(false);
@@ -435,19 +467,15 @@ function AutonomousPanel() {
             sub={data?.enabled ? 'Agent acts on its own' : 'Waiting for commands'} />
         </div>
         {data?.last_tick_result?.results?.length > 0 && (
-          <div className="mt-3 space-y-1.5">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Last Tick Activity</p>
-            {data.last_tick_result.results.map((r, i) => (
-              <div key={i} className="bg-surface-2 border border-surface-3 rounded-lg px-3 py-2 overflow-hidden">
-                <div className="flex items-center gap-2">
-                  <Badge color={r.type === 'github_scan' ? 'info' : r.type === 'yield_management' ? 'warn' : 'accent'}>
-                    {r.type.replace('_', ' ')}
-                  </Badge>
-                  {r.amount && <span className="text-[11px] text-zinc-300">${r.amount.toFixed(2)}</span>}
-                </div>
-                <p className="text-[11px] text-zinc-400 mt-1 line-clamp-3 break-words" style={{ overflowWrap: 'anywhere' }}>{r.result}</p>
-              </div>
-            ))}
+          <div className="mt-3 space-y-2">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">
+              Tick #{data.last_tick_result.tick} — Agent Reasoning
+            </p>
+            <div className="space-y-1.5 max-h-96 overflow-y-auto">
+              {data.last_tick_result.results.map((r, i) => (
+                <TickResultCard key={i} r={r} />
+              ))}
+            </div>
           </div>
         )}
       </div>
