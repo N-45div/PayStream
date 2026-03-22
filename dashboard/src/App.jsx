@@ -411,8 +411,8 @@ function TickResultCard({ r }) {
         </div>
       )}
       {!expanded && r.result && (
-        <div className="px-3 pb-2">
-          <p className="text-[11px] text-zinc-500 truncate">{r.result.split('\n')[0]}</p>
+        <div className="px-3 pb-2 overflow-hidden">
+          <p className="text-[11px] text-zinc-500 line-clamp-2 break-all" style={{ overflowWrap: 'anywhere' }}>{r.result.split('\n')[0]}</p>
         </div>
       )}
     </div>

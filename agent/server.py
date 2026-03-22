@@ -86,12 +86,13 @@ async def _autonomous_tick():
     # 2. Check GitHub for new merged PRs (if configured)
     if GITHUB_REPO and contributor_registry.get_active():
         prompt = (
+            f"TASK: GitHub PR scan ONLY. Do NOT touch Aave, do NOT do yield management.\n\n"
             f"Check the GitHub repo '{GITHUB_REPO}' for recently merged pull requests. "
             f"For each merged PR by a registered contributor that hasn't been paid yet, "
             f"evaluate the work quality, calculate a fair bounty based on their role and effort, "
             f"run the policy check, and if approved, execute the USDT payment via WDK on Polygon. "
             f"Already processed PR numbers (skip these): {list(agent_ref['processed_prs'])}. "
-            f"Report what you did for each PR."
+            f"Report what you did for each PR. Only use GitHub and payment tools."
         )
         result = await _agent_invoke(prompt)
         tick_results.append({"type": "github_scan", "result": result["response"], "tool_calls": result["tool_calls"]})
