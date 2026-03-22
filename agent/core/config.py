@@ -19,9 +19,9 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 GITHUB_REPO = os.getenv("GITHUB_REPO", "")
 
 # RPC (passed to WDK server via env)
-POLYGON_RPC = os.getenv("POLYGON_RPC", "https://polygon-rpc.com")
-ETH_RPC = os.getenv("ETH_RPC", "https://eth.drpc.org")
-ARB_RPC = os.getenv("ARB_RPC", "https://arb1.arbitrum.io/rpc")
+POLYGON_RPC = os.getenv("POLYGON_RPC", "https://polygon.llamarpc.com")
+ETH_RPC = os.getenv("ETH_RPC", "https://eth.llamarpc.com")
+ARB_RPC = os.getenv("ARB_RPC", "https://arbitrum.llamarpc.com")
 
 # API
 PORT = int(os.getenv("PORT", "8000"))

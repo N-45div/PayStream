@@ -48,13 +48,13 @@ async function main() {
 
   // 2. Register EVM chains (multi-chain: Polygon + Ethereum + Arbitrum)
   server.registerWallet('polygon', WalletManagerEvm, {
-    provider: process.env.POLYGON_RPC || 'https://polygon-rpc.com',
+    provider: process.env.POLYGON_RPC || 'https://polygon.llamarpc.com',
   });
   server.registerWallet('ethereum', WalletManagerEvm, {
-    provider: process.env.ETH_RPC || 'https://eth.drpc.org',
+    provider: process.env.ETH_RPC || 'https://eth.llamarpc.com',
   });
   server.registerWallet('arbitrum', WalletManagerEvm, {
-    provider: process.env.ARB_RPC || 'https://arb1.arbitrum.io/rpc',
+    provider: process.env.ARB_RPC || 'https://arbitrum.llamarpc.com',
   });
 
   // 3. Register Aave V3 lending on Ethereum (idle treasury yield)
