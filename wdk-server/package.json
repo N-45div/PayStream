@@ -1,0 +1,17 @@
+{
+  "name": "paystream-wdk-server",
+  "version": "1.0.0",
+  "description": "PayStream WDK MCP Server — multi-chain wallet, lending, and pricing tools via MCP",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@tetherto/wdk-mcp-toolkit": "github:tetherto/wdk-mcp-toolkit",
+    "@tetherto/wdk": "^1.0.0-beta.6",
+    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.6",
+    "@tetherto/wdk-protocol-lending-aave-evm": "github:tetherto/wdk-protocol-lending-aave-evm",
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
