@@ -26,4 +26,10 @@ export const api = {
 
   getAudit:        (limit=40)  => req(`/audit?limit=${limit}`),
   getAuditSummary: ()          => req('/audit/summary'),
+
+  // Autonomous loop
+  getAutonomous:   ()          => req('/autonomous/status'),
+  enableAuto:      ()          => req('/autonomous/enable', { method: 'POST' }),
+  disableAuto:     ()          => req('/autonomous/disable', { method: 'POST' }),
+  triggerTick:     ()          => req('/autonomous/trigger', { method: 'POST' }),
 };

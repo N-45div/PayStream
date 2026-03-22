@@ -4,7 +4,7 @@ import {
   Send, Users, Wallet, Activity, Shield, ScrollText,
   Plus, X, Play, Pause, ChevronRight, ExternalLink,
   CircleDollarSign, Clock, CheckCircle2, XCircle, AlertTriangle,
-  Bot, Loader2, ArrowUpRight, ArrowDownRight,
+  Bot, Loader2, ArrowUpRight, ArrowDownRight, Zap, Power, RefreshCw,
 } from 'lucide-react';
 
 // ─── Hooks ──────────────────────────────────────────────────────────
@@ -324,6 +324,74 @@ function AuditPanel() {
   );
 }
 
+function AutonomousPanel() {
+  const [data, refresh] = usePolling(api.getAutonomous, 3000);
+  const [triggering, setTriggering] = useState(false);
+
+  const toggle = async () => {
+    if (data?.enabled) await api.disableAuto();
+    else await api.enableAuto();
+    refresh();
+  };
+
+  const trigger = async () => {
+    setTriggering(true);
+    try { await api.triggerTick(); refresh(); } catch {}
+    setTriggering(false);
+  };
+
+  const lastTick = data?.last_tick_time
+    ? new Date(data.last_tick_time * 1000).toLocaleTimeString()
+    : 'Never';
+
+  return (
+    <Card>
+      <CardHeader icon={Zap} title="Autonomous Loop">
+        <div className="flex items-center gap-2">
+          <button onClick={trigger} disabled={triggering}
+            className="flex items-center gap-1.5 text-xs font-medium text-accent bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5 hover:bg-accent/20 transition-colors disabled:opacity-30">
+            {triggering ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+            Trigger Tick
+          </button>
+          <button onClick={toggle}
+            className={`flex items-center gap-1.5 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors border ${
+              data?.enabled
+                ? 'text-accent bg-accent/10 border-accent/20 hover:bg-accent/20'
+                : 'text-zinc-400 bg-surface-3 border-surface-4 hover:bg-surface-4'
+            }`}>
+            <Power className="w-3 h-3" />
+            {data?.enabled ? 'On' : 'Off'}
+          </button>
+        </div>
+      </CardHeader>
+      <div className="p-5 space-y-3">
+        <div className="grid grid-cols-3 gap-4">
+          <Stat label="Ticks" value={data?.tick_count ?? 0} sub="Autonomous cycles" />
+          <Stat label="Last Tick" value={lastTick} sub={`Every ${data?.interval_s ?? 30}s`} />
+          <Stat label="Mode" value={data?.enabled ? 'AUTONOMOUS' : 'MANUAL'}
+            sub={data?.enabled ? 'Agent acts on its own' : 'Waiting for commands'} />
+        </div>
+        {data?.last_tick_result?.results?.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Last Tick Activity</p>
+            {data.last_tick_result.results.map((r, i) => (
+              <div key={i} className="bg-surface-2 border border-surface-3 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Badge color={r.type === 'github_scan' ? 'info' : r.type === 'yield_management' ? 'warn' : 'accent'}>
+                    {r.type.replace('_', ' ')}
+                  </Badge>
+                  {r.amount && <span className="text-[11px] text-zinc-300">${r.amount.toFixed(2)}</span>}
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-1 line-clamp-2">{r.result}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 // ─── Main App ───────────────────────────────────────────────────────
 
 export default function App() {
@@ -365,7 +433,7 @@ export default function App() {
           {/* Right column: Data panels */}
           <div className="col-span-12 lg:col-span-7 xl:col-span-8 space-y-4">
             {/* Top stats row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <Card className="p-5">
                 <Stat label="Contributors" value={health?.contributors ?? '-'} sub="Registered team" />
               </Card>
@@ -375,6 +443,10 @@ export default function App() {
               <Card className="p-5">
                 <Stat label="Agent" value={health?.agent_loaded ? 'Online' : 'Offline'} sub="LangGraph + WDK MCP" />
               </Card>
+              <Card className="p-5">
+                <Stat label="Auto Loop" value={health?.autonomous?.enabled ? 'Active' : 'Off'}
+                  sub={`${health?.autonomous?.tick_count ?? 0} ticks`} />
+              </Card>
             </div>
 
             {/* Main panels */}
@@ -382,6 +454,8 @@ export default function App() {
               <ContributorsPanel />
               <StreamsPanel />
             </div>
+
+            <AutonomousPanel />
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <PolicyPanel />

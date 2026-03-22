@@ -1,7 +1,9 @@
-"""FastAPI server - exposes the LangGraph agent + state to the React dashboard."""
+"""FastAPI server - exposes the LangGraph agent + autonomous background loop."""
 
 from __future__ import annotations
 import asyncio
+import time
+import traceback
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -9,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from core.config import PORT
+from core.config import PORT, DEFAULT_POLICY, GITHUB_REPO
 from core.audit_log import audit_log
 from core.policy_engine import policy_engine
 from core.contributor_registry import contributor_registry
@@ -19,24 +21,171 @@ from graph import make_graph
 
 # ── State ────────────────────────────────────────────────────────────
 
-agent_ref: dict[str, Any] = {"agent": None, "mcp_ctx": None, "running": False, "tick_count": 0}
+agent_ref: dict[str, Any] = {
+    "agent": None,
+    "mcp_client": None,
+    "running": False,
+    "tick_count": 0,
+    "last_tick_time": None,
+    "last_tick_result": None,
+    "processed_prs": set(),       # PR numbers already processed
+    "autonomous_enabled": True,
+    "tick_task": None,
+}
+
+
+# ── Autonomous Loop ──────────────────────────────────────────────────
+
+async def _agent_invoke(message: str) -> dict:
+    """Send a message to the agent and return the last AI response."""
+    agent = agent_ref["agent"]
+    if not agent:
+        return {"response": "Agent not ready", "tool_calls": 0}
+    result = await agent.ainvoke({"messages": [{"role": "user", "content": message}]})
+    messages = result.get("messages", [])
+    for msg in reversed(messages):
+        if hasattr(msg, "content") and msg.type == "ai":
+            return {"response": msg.content, "tool_calls": len([m for m in messages if m.type == "tool"])}
+    return {"response": "No response", "tool_calls": 0}
+
+
+async def _autonomous_tick():
+    """One autonomous tick: check PRs, process streams, manage yield."""
+    tick_results = []
+
+    # 1. Process active streams (pay due amounts)
+    active_streams = stream_manager.active()
+    for s in active_streams:
+        due = s.due_amount()
+        if due >= 0.01:  # minimum $0.01 to avoid dust
+            check = policy_engine.can_pay(s.recipient, due, float('inf'))  # balance checked by agent
+            if check["allowed"]:
+                prompt = (
+                    f"A payment stream #{s.id} has ${due:.2f} USDT due for recipient {s.recipient}. "
+                    f"Reason: {s.reason}. Please execute this transfer on Polygon using the WDK transfer tool. "
+                    f"After sending, report the transaction hash."
+                )
+                result = await _agent_invoke(prompt)
+                tick_results.append({"type": "stream_payment", "stream_id": s.id, "amount": due, "result": result["response"][:200]})
+                audit_log.log("AUTONOMOUS_STREAM_TICK", {"stream_id": s.id, "due": due})
+
+    # 2. Check GitHub for new merged PRs (if configured)
+    if GITHUB_REPO and contributor_registry.get_active():
+        prompt = (
+            f"Check the GitHub repo '{GITHUB_REPO}' for recently merged pull requests. "
+            f"For each merged PR by a registered contributor that hasn't been paid yet, "
+            f"evaluate the work quality, calculate a fair bounty based on their role and effort, "
+            f"run the policy check, and if approved, execute the USDT payment via WDK on Polygon. "
+            f"Already processed PR numbers (skip these): {list(agent_ref['processed_prs'])}. "
+            f"Report what you did for each PR."
+        )
+        result = await _agent_invoke(prompt)
+        tick_results.append({"type": "github_scan", "result": result["response"][:300]})
+        audit_log.log("AUTONOMOUS_GITHUB_SCAN", {"tool_calls": result["tool_calls"]})
+
+    # 3. Treasury yield management — check if idle USDT should go to Aave
+    if agent_ref["tick_count"] % 5 == 0:  # every 5th tick
+        prompt = (
+            "Check the treasury USDT balance on Polygon. If the balance is significantly above "
+            "the minimum reserve (more than 2x the min_balance policy), consider supplying the "
+            "excess to Aave V3 on Ethereum to earn yield. If there's already USDT supplied to Aave "
+            "and we need funds for upcoming stream payments, consider withdrawing. "
+            "Report your decision and reasoning."
+        )
+        result = await _agent_invoke(prompt)
+        tick_results.append({"type": "yield_management", "result": result["response"][:200]})
+        audit_log.log("AUTONOMOUS_YIELD_CHECK", {"tool_calls": result["tool_calls"]})
+
+    return tick_results
+
+
+async def _autonomous_loop():
+    """Background loop that runs autonomous ticks at configured intervals."""
+    await asyncio.sleep(5)  # initial delay to let everything start
+    audit_log.log("AUTONOMOUS_LOOP_STARTED", {"interval_s": DEFAULT_POLICY["tick_interval_s"]})
+
+    while True:
+        interval = policy_engine.policy.get("tick_interval_s", 30)
+        try:
+            if agent_ref["autonomous_enabled"] and not policy_engine.paused and agent_ref["agent"]:
+                agent_ref["tick_count"] += 1
+                agent_ref["last_tick_time"] = time.time()
+                results = await _autonomous_tick()
+                agent_ref["last_tick_result"] = {
+                    "tick": agent_ref["tick_count"],
+                    "time": time.time(),
+                    "results": results,
+                }
+        except Exception as e:
+            audit_log.log("AUTONOMOUS_TICK_ERROR", {"error": str(e), "traceback": traceback.format_exc()[:500]})
+        await asyncio.sleep(interval)
 
 
 # ── Lifespan ─────────────────────────────────────────────────────────
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Start the LangGraph agent on server boot."""
+    """Start the LangGraph agent and autonomous loop on server boot."""
     agent, mcp_client = await make_graph()
     agent_ref["agent"] = agent
     agent_ref["mcp_client"] = mcp_client
+    # Start autonomous background loop
+    agent_ref["tick_task"] = asyncio.create_task(_autonomous_loop())
+    audit_log.log("AGENT_STARTED", {"tools": "35 (21 MCP + 14 Python)"})
     yield
+    # Shutdown
+    if agent_ref["tick_task"]:
+        agent_ref["tick_task"].cancel()
     agent_ref["agent"] = None
     agent_ref["mcp_client"] = None
 
 
 app = FastAPI(title="PayStream — Autonomous Payroll DAO", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+# ── Autonomous control endpoints ─────────────────────────────────────
+
+@app.get("/api/autonomous/status")
+async def autonomous_status():
+    return {
+        "enabled": agent_ref["autonomous_enabled"],
+        "tick_count": agent_ref["tick_count"],
+        "last_tick_time": agent_ref["last_tick_time"],
+        "last_tick_result": agent_ref["last_tick_result"],
+        "processed_prs": list(agent_ref["processed_prs"]),
+        "interval_s": policy_engine.policy.get("tick_interval_s", 30),
+    }
+
+@app.post("/api/autonomous/enable")
+async def autonomous_enable():
+    agent_ref["autonomous_enabled"] = True
+    audit_log.log("AUTONOMOUS_ENABLED", {})
+    return {"enabled": True}
+
+@app.post("/api/autonomous/disable")
+async def autonomous_disable():
+    agent_ref["autonomous_enabled"] = False
+    audit_log.log("AUTONOMOUS_DISABLED", {})
+    return {"enabled": False}
+
+@app.post("/api/autonomous/trigger")
+async def autonomous_trigger():
+    """Manually trigger one autonomous tick (for demo)."""
+    if not agent_ref["agent"]:
+        return {"error": "Agent not ready"}
+    agent_ref["tick_count"] += 1
+    agent_ref["last_tick_time"] = time.time()
+    try:
+        results = await _autonomous_tick()
+        agent_ref["last_tick_result"] = {
+            "tick": agent_ref["tick_count"],
+            "time": time.time(),
+            "results": results,
+        }
+        return agent_ref["last_tick_result"]
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # ── Request models ───────────────────────────────────────────────────
@@ -68,16 +217,8 @@ class PolicyRequest(BaseModel):
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
     """Send a message to the AI agent. It can reason, check balances, pay people, etc."""
-    agent = agent_ref["agent"]
-    if not agent:
-        return {"error": "Agent not initialized"}
-    result = await agent.ainvoke({"messages": [{"role": "user", "content": req.message}]})
-    messages = result.get("messages", [])
-    # Return the last AI message
-    for msg in reversed(messages):
-        if hasattr(msg, "content") and msg.type == "ai":
-            return {"response": msg.content, "tool_calls": len([m for m in messages if m.type == "tool"])}
-    return {"response": "No response", "tool_calls": 0}
+    result = await _agent_invoke(req.message)
+    return result
 
 
 # ── Contributors ─────────────────────────────────────────────────────
@@ -165,6 +306,11 @@ async def health():
         "contributors": len(contributor_registry.get_all()),
         "active_streams": len(stream_manager.active()),
         "policy": policy_engine.status(),
+        "autonomous": {
+            "enabled": agent_ref["autonomous_enabled"],
+            "tick_count": agent_ref["tick_count"],
+            "last_tick_time": agent_ref["last_tick_time"],
+        },
     }
 
 
