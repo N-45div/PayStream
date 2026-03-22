@@ -292,18 +292,6 @@ flowchart TD
 ```
 
 ---
-
-## Hackathon Track Alignment
-
-| Criteria | How PayStream Addresses It |
-|----------|---------------------------|
-| **Technical correctness** | WDK MCP Toolkit for wallet ops, LangGraph for orchestration, FastAPI for API — clean 3-layer separation |
-| **Agent autonomy** | ReAct agent reasons about PR quality, calculates bounties, enforces policy — zero manual triggers |
-| **Economic soundness** | Budget caps, daily limits, min balance, AI approval for large payments, Aave V3 yield on idle treasury |
-| **Real-world applicability** | Every DAO and open-source project needs automated contributor payments — deployable today |
-
----
-
 ## Tech Stack
 
 | Component | Technology | Why |
