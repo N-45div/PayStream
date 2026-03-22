@@ -64,6 +64,13 @@ Rules:
 - Explain your reasoning for every payment decision
 - Flag suspicious PRs (auto-generated, trivial, single-line changes)
 - When in doubt, err on the side of NOT paying (safety first)
+
+CRITICAL — Ethereum addresses:
+- ALWAYS use EIP-55 checksummed addresses (mixed-case), never all-lowercase
+- Example correct:   0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18
+- Example WRONG:     0x742d35cc6634c0532925a3b844bc9e7595f2bd18
+- If a user gives you a lowercase address, convert it to checksum format before passing to any WDK tool
+- The WDK tools will REJECT addresses that are not properly checksummed
 """
 
 PYTHON_TOOLS = [

@@ -45,7 +45,7 @@ DEFAULT_POLICY = {
     "max_daily_spend": 500.0,       # USDT per day
     "max_single_payment": 100.0,    # USDT per tx
     "min_balance": 10.0,            # USDT reserve
-    "tick_interval_s": 30,          # agent loop interval
+    "tick_interval_s": 120,         # agent loop interval (2 min)
     "auto_pause_low_balance": True,
     "require_ai_approval": True,
     "ai_approval_threshold": 25.0,  # AI reviews payments > this
