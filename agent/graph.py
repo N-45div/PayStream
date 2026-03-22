@@ -114,7 +114,6 @@ async def make_graph():
         }
     )
 
-    # New API (v0.1.0+): no context manager, just await get_tools()
     wdk_tools = await mcp_client.get_tools()
     all_tools = wdk_tools + PYTHON_TOOLS
 

@@ -2,6 +2,23 @@
 // Exposes multi-chain wallet operations (transfer, balance, Aave lending)
 // as MCP tools for the Python LangGraph agent to call via stdio transport
 
+// CRITICAL: Intercept stdout BEFORE any imports.
+// The WDK library internally logs RPC errors to stdout which breaks
+// the MCP JSON-RPC protocol. We redirect any non-JSON-RPC stdout to stderr.
+const _origStdoutWrite = process.stdout.write.bind(process.stdout);
+process.stdout.write = function (chunk, encoding, callback) {
+  const str = typeof chunk === 'string' ? chunk : chunk.toString();
+  const trimmed = str.trim();
+  // Only allow lines that look like valid JSON-RPC (start with '{')
+  // Everything else goes to stderr so MCP protocol stays clean
+  if (trimmed.startsWith('{') || trimmed === '') {
+    return _origStdoutWrite(chunk, encoding, callback);
+  }
+  // Redirect non-JSON to stderr
+  process.stderr.write(chunk, encoding, callback);
+  return true;
+};
+
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   WdkMcpServer,

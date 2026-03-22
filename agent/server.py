@@ -29,7 +29,7 @@ agent_ref: dict[str, Any] = {
     "last_tick_time": None,
     "last_tick_result": None,
     "processed_prs": set(),       # PR numbers already processed
-    "autonomous_enabled": True,
+    "autonomous_enabled": False,    # Off by default — enable via dashboard
     "tick_task": None,
 }
 
@@ -41,12 +41,17 @@ async def _agent_invoke(message: str) -> dict:
     agent = agent_ref["agent"]
     if not agent:
         return {"response": "Agent not ready", "tool_calls": 0}
-    result = await agent.ainvoke({"messages": [{"role": "user", "content": message}]})
-    messages = result.get("messages", [])
-    for msg in reversed(messages):
-        if hasattr(msg, "content") and msg.type == "ai":
-            return {"response": msg.content, "tool_calls": len([m for m in messages if m.type == "tool"])}
-    return {"response": "No response", "tool_calls": 0}
+    try:
+        result = await agent.ainvoke({"messages": [{"role": "user", "content": message}]})
+        messages = result.get("messages", [])
+        for msg in reversed(messages):
+            if hasattr(msg, "content") and msg.type == "ai":
+                return {"response": msg.content, "tool_calls": len([m for m in messages if m.type == "tool"])}
+        return {"response": "No response", "tool_calls": 0}
+    except Exception as e:
+        err_msg = str(e)[:300]
+        audit_log.log("AGENT_INVOKE_ERROR", {"error": err_msg, "prompt": message[:100]})
+        return {"response": f"Error: {err_msg}", "tool_calls": 0}
 
 
 async def _autonomous_tick():
@@ -294,6 +299,17 @@ async def api_audit(limit: int = 50):
 @app.get("/api/audit/summary")
 async def api_audit_summary():
     return audit_log.summary()
+
+
+# ── Wallet ──────────────────────────────────────────────────────────
+
+@app.get("/api/wallet/address")
+async def wallet_address():
+    """Ask the agent for the treasury wallet address."""
+    result = await _agent_invoke(
+        "What is our wallet address on Polygon? Just return the address, nothing else."
+    )
+    return result
 
 
 # ── Health ───────────────────────────────────────────────────────────
