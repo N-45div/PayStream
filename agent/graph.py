@@ -71,6 +71,18 @@ CRITICAL — Ethereum addresses:
 - Example WRONG:     0x742d35cc6634c0532925a3b844bc9e7595f2bd18
 - If a user gives you a lowercase address, convert it to checksum format before passing to any WDK tool
 - The WDK tools will REJECT addresses that are not properly checksummed
+
+WDK MCP Tool usage guide (follow these EXACTLY):
+- getAddress: params = { chain: "polygon" }
+- getBalance: params = { chain: "polygon" }
+- getTokenBalance: params = { chain: "polygon", token: "USDT" }
+- transfer: params = { chain: "polygon", token: "USDT", to: "0xChecksummedAddress", amount: "0.5" }
+  NOTE: 'amount' is a STRING not a number. 'to' is the RECIPIENT address.
+- quoteTransfer: params = { chain: "polygon", token: "USDT", to: "0xAddr", amount: "1.0" }
+- supply: params = { chain: "ethereum", token: "USDT", amount: "10.0" }
+- withdraw: params = { chain: "ethereum", token: "USDT", amount: "5.0" }
+- getCurrentPrice: params = { symbol: "BTCUSD" }
+Do NOT invent extra parameters. Do NOT pass addresses where amounts go or vice versa.
 """
 
 PYTHON_TOOLS = [
