@@ -21,6 +21,8 @@ from graph import make_graph
 
 # ── State ────────────────────────────────────────────────────────────
 
+_agent_lock = asyncio.Lock()
+
 agent_ref: dict[str, Any] = {
     "agent": None,
     "mcp_client": None,
@@ -36,18 +38,25 @@ agent_ref: dict[str, Any] = {
 
 # ── Autonomous Loop ──────────────────────────────────────────────────
 
-async def _agent_invoke(message: str) -> dict:
+async def _agent_invoke(message: str, timeout: float = 120) -> dict:
     """Send a message to the agent and return the last AI response."""
     agent = agent_ref["agent"]
     if not agent:
         return {"response": "Agent not ready", "tool_calls": 0}
     try:
-        result = await agent.ainvoke({"messages": [{"role": "user", "content": message}]})
+        async with _agent_lock:
+            result = await asyncio.wait_for(
+                agent.ainvoke({"messages": [{"role": "user", "content": message}]}),
+                timeout=timeout,
+            )
         messages = result.get("messages", [])
         for msg in reversed(messages):
             if hasattr(msg, "content") and msg.type == "ai":
                 return {"response": msg.content, "tool_calls": len([m for m in messages if m.type == "tool"])}
         return {"response": "No response", "tool_calls": 0}
+    except asyncio.TimeoutError:
+        audit_log.log("AGENT_INVOKE_TIMEOUT", {"prompt": message[:100]})
+        return {"response": "Request timed out after 120s. Try a simpler query.", "tool_calls": 0}
     except Exception as e:
         err_msg = str(e)[:300]
         audit_log.log("AGENT_INVOKE_ERROR", {"error": err_msg, "prompt": message[:100]})
@@ -113,6 +122,10 @@ async def _autonomous_loop():
         interval = policy_engine.policy.get("tick_interval_s", 30)
         try:
             if agent_ref["autonomous_enabled"] and not policy_engine.paused and agent_ref["agent"]:
+                # Skip tick if a chat request is in progress
+                if _agent_lock.locked():
+                    await asyncio.sleep(interval)
+                    continue
                 agent_ref["tick_count"] += 1
                 agent_ref["last_tick_time"] = time.time()
                 results = await _autonomous_tick()
