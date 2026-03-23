@@ -366,22 +366,22 @@ function SettingsPanel() {
         <div>
           <label className="text-[11px] text-zinc-500 uppercase tracking-wider mb-1.5 block">GitHub Repository</label>
           <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 bg-surface-2 border border-surface-4 rounded-lg px-3 py-2">
+            <div className="flex-1 min-w-0 flex items-center gap-2 bg-surface-2 border border-surface-4 rounded-lg px-3 py-2">
               <Github className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
               <input value={repo} onChange={e => setRepo(e.target.value)}
                 placeholder="owner/repo"
-                className="flex-1 bg-transparent text-sm text-zinc-200 outline-none placeholder:text-zinc-600" />
+                className="w-full min-w-0 bg-transparent text-xs text-zinc-200 outline-none placeholder:text-zinc-600 truncate" />
             </div>
             <button onClick={save} disabled={saving || !repo.trim()}
-              className="text-xs font-medium text-accent bg-accent/10 border border-accent/20 rounded-lg px-4 py-2 hover:bg-accent/20 transition-colors disabled:opacity-30">
-              {saving ? 'Saving...' : 'Save'}
+              className="flex-shrink-0 text-xs font-medium text-accent bg-accent/10 border border-accent/20 rounded-lg px-3 py-2 hover:bg-accent/20 transition-colors disabled:opacity-30">
+              {saving ? '...' : 'Save'}
             </button>
           </div>
           {settings?.github_repo && (
-            <p className="text-[11px] text-zinc-500 mt-1.5 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-accent" />
-              Monitoring <a href={`https://github.com/${settings.github_repo}`} target="_blank" rel="noreferrer"
-                className="text-accent hover:underline">{settings.github_repo}</a>
+            <p className="text-[11px] text-zinc-500 mt-1.5 flex items-center gap-1 min-w-0">
+              <CheckCircle2 className="w-3 h-3 text-accent flex-shrink-0" />
+              <span className="truncate">Monitoring <a href={`https://github.com/${settings.github_repo}`} target="_blank" rel="noreferrer"
+                className="text-accent hover:underline">{settings.github_repo}</a></span>
             </p>
           )}
         </div>
