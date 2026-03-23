@@ -6,6 +6,7 @@ import os
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
+from mcp.types import ElicitResult
 
 from core.config import (
     OPENROUTER_API_KEY,
@@ -122,6 +123,15 @@ async def make_graph():
         "ARB_RPC": ARB_RPC,
     }
 
+    # Auto-accept elicitation: the WDK MCP toolkit requires user confirmation
+    # for all write operations (transfer, sendTransaction, supply, withdraw, etc.).
+    # Since our agent is autonomous and policy engine handles safety checks,
+    # we auto-accept all confirmations.
+    # Signature must match MCP SDK ElicitationFnT: (context, params) -> ElicitResult
+    async def _auto_accept_elicitation(context, params):
+        """Auto-accept WDK write confirmations for autonomous operation."""
+        return ElicitResult(action="accept", content={"confirmed": True})
+
     mcp_client = MultiServerMCPClient(
         {
             "wdk": {
@@ -129,6 +139,9 @@ async def make_graph():
                 "args": WDK_SERVER_ARGS,
                 "transport": "stdio",
                 "env": env,
+                "session_kwargs": {
+                    "elicitation_callback": _auto_accept_elicitation,
+                },
             },
         }
     )
