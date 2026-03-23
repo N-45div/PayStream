@@ -1,8 +1,10 @@
 # PayStream — Autonomous Payroll DAO Agent
 
-> AI-powered contributor rewards with self-custodial treasury via **Tether WDK**
+> Autonomous AI treasury that pays contributors, manages yield, and bridges USDT across 4 chains — self-custodial, policy-governed, zero human intervention.
 
 Built for [Hackathon Galáctica: WDK Edition](https://dorahacks.io/hackathon/hackathon-galactica-wdk-2026-01) — **Agent Wallets Track**
+
+**Live:** [https://paystream-1064261519338.us-central1.run.app](https://paystream-1064261519338.us-central1.run.app)
 
 ---
 
@@ -93,9 +95,10 @@ graph TB
 
 | Layer | Technology | Responsibility |
 |-------|-----------|----------------|
-| **Dashboard** | React 18 + Tailwind CSS + Vite | Real-time treasury monitoring, agent chat, autonomous loop visibility |
+| **Landing Page** | React + Mermaid.js | Interactive landing with 3 live mermaid diagrams (architecture, payment flow, policy engine) |
+| **Dashboard** | React 18 + Tailwind CSS + Vite | Real-time treasury monitoring, agent chat with voice input (STT), autonomous loop, settings UI |
 | **Agent** | Python + LangGraph + FastAPI | AI reasoning, policy enforcement, GitHub monitoring, payroll logic |
-| **WDK MCP** | Node.js + `@tetherto/wdk-mcp-toolkit` | 23+ MCP tools — wallet, lending, pricing, bridging |
+| **WDK MCP** | Node.js + `@tetherto/wdk-mcp-toolkit` | 35+ MCP tools — wallet, lending, pricing, bridging |
 | **Chains** | Polygon, Ethereum, Arbitrum, **Solana** | USDT transfers, Aave V3 yield, USDT0 cross-chain bridge |
 
 ### Autonomous Loop
@@ -123,6 +126,8 @@ sequenceDiagram
 - Calculates fair bounties based on contributor role + effort
 - Creates time-based payment streams without human intervention
 - **MCP elicitation auto-accept** — true autonomy (no human confirmation needed for transfers)
+- **Voice input (STT)** — speak commands via browser SpeechRecognition API
+- **Configurable GitHub repo** — change monitored repo from dashboard at runtime
 
 ### Multi-Chain Treasury (4 Chains)
 - **Polygon** — low-fee USDT payments (default for payroll)
@@ -149,6 +154,18 @@ sequenceDiagram
 - Policy check results (approved/rejected + reason)
 - AI reasoning captured for every payment decision
 - Transaction hashes linked to block explorers
+
+### x402 Payment Protocol Ready
+- WDK's EVM wallet natively satisfies the x402 `ClientEvmSigner` interface
+- PayStream can **pay for** external API services autonomously via HTTP 402 — no accounts, no API keys
+- Can also **charge other agents** for access to its payroll API — enabling agent-to-agent economy
+- USDT payments over HTTP, machine-to-machine, trustless
+
+### Landing Page & Interactive Diagrams
+- Dedicated landing page with hero, feature grid, and CTA
+- **3 live mermaid diagrams** rendered in-browser: system architecture, payment flow, policy engine
+- WDK module breakdown table
+- Hash-based routing: `/` = landing page, `/#dashboard` = full app
 
 ---
 
@@ -220,7 +237,7 @@ Create `agent/.env` (see `agent/.env.example`):
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `OPENROUTER_API_KEY` | **Yes** | — | LLM API key from [OpenRouter](https://openrouter.ai) |
-| `OPENROUTER_MODEL` | No | `anthropic/claude-3.5-sonnet` | Any model on OpenRouter |
+| `OPENROUTER_MODEL` | No | `stepfun/step-3.5-flash:free` | Any chat model on OpenRouter (must support tool calling) |
 | `WDK_SEED` | No | Auto-generated + persisted | BIP-39 mnemonic for wallet |
 | `GITHUB_TOKEN` | No | — | GitHub PAT for PR monitoring |
 | `GITHUB_REPO` | No | — | Default repo to watch (`owner/repo`) |
@@ -293,11 +310,13 @@ PayStream/
 │   ├── server.py               # FastAPI REST server + static dashboard
 │   ├── requirements.txt
 │   └── .env.example
-├── dashboard/                  # React — Real-time Dashboard
+├── dashboard/                  # React — Real-time Dashboard + Landing
 │   ├── src/
-│   │   ├── App.jsx             # Main UI (6 panels + stats)
-│   │   ├── api.js              # API client
-│   │   ├── main.jsx            # Entry point
+│   │   ├── App.jsx             # Dashboard UI (8 panels + stats + STT)
+│   │   ├── Landing.jsx         # Landing page with mermaid diagrams
+│   │   ├── Mermaid.jsx         # Mermaid diagram renderer (dark theme)
+│   │   ├── api.js              # API client (chat, settings, autonomous)
+│   │   ├── main.jsx            # Entry + hash-based routing
 │   │   └── index.css           # Tailwind + custom styles
 │   ├── index.html
 │   ├── vite.config.js
@@ -356,9 +375,9 @@ flowchart LR
 | MCP Tools | [WDK MCP Toolkit](https://github.com/tetherto/wdk-mcp-toolkit) | 23+ tools — wallet, lending, pricing, bridge |
 | Agent | [LangGraph](https://langchain-ai.github.io/langgraph/) | Production-grade stateful ReAct agent |
 | MCP Bridge | [langchain-mcp-adapters](https://github.com/langchain-ai/langchain-mcp-adapters) | Official LangChain ↔ MCP integration |
-| LLM | [OpenRouter](https://openrouter.ai) | Vendor-agnostic — any model (Claude, GPT-4, Llama) |
+| LLM | [OpenRouter](https://openrouter.ai) | Vendor-agnostic — stepfun/step-3.5-flash:free (supports tool calling) |
 | API | [FastAPI](https://fastapi.tiangolo.com) | Async Python, auto-docs, Pydantic validation |
-| Dashboard | [React](https://react.dev) + [Tailwind CSS](https://tailwindcss.com) | Modern, minimal, production-ready |
+| Dashboard | [React](https://react.dev) + [Tailwind CSS](https://tailwindcss.com) + [Mermaid.js](https://mermaid.js.org) | Modern UI, landing page with live diagrams, voice input |
 | Chains | Polygon, Ethereum, Arbitrum, Solana | 4-chain USDT + Aave yield + USDT0 bridge |
 | Deploy | Docker + Google Cloud Run | Multi-runtime container (Node + Python) |
 
@@ -383,15 +402,21 @@ PayStream ships with a multi-stage `Dockerfile` for Google Cloud Run:
 
 ```bash
 # Build & deploy to Cloud Run
+docker build -t paystream .
+docker tag paystream us-central1-docker.pkg.dev/YOUR_PROJECT/cloud-run-source-deploy/paystream:latest
+docker push us-central1-docker.pkg.dev/YOUR_PROJECT/cloud-run-source-deploy/paystream:latest
+
 gcloud run deploy paystream \
-  --source . \
+  --image us-central1-docker.pkg.dev/YOUR_PROJECT/cloud-run-source-deploy/paystream:latest \
   --region us-central1 \
   --allow-unauthenticated \
   --memory 2Gi --cpu 2 \
-  --set-env-vars "OPENROUTER_API_KEY=...,WDK_SEED=..."
+  --set-env-vars "OPENROUTER_API_KEY=...,OPENROUTER_MODEL=stepfun/step-3.5-flash:free,WDK_SEED=..."
 ```
 
-The container bundles Node.js (WDK server) + Python (agent) + built React dashboard. FastAPI serves the static dashboard in production.
+The container bundles Node.js (WDK server) + Python (agent) + built React dashboard with landing page. FastAPI serves the static dashboard in production.
+
+**Live deployment:** [https://paystream-1064261519338.us-central1.run.app](https://paystream-1064261519338.us-central1.run.app)
 
 ---
 
