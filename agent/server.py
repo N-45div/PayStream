@@ -36,6 +36,7 @@ agent_ref: dict[str, Any] = {
     "processed_prs": set(),       # PR numbers already processed
     "autonomous_enabled": False,    # Off by default — enable via dashboard
     "tick_task": None,
+    "github_repo": GITHUB_REPO,   # mutable at runtime from dashboard
 }
 
 
@@ -87,10 +88,11 @@ async def _autonomous_tick():
                 audit_log.log("AUTONOMOUS_STREAM_TICK", {"stream_id": s.id, "due": due})
 
     # 2. Check GitHub for new merged PRs (if configured)
-    if GITHUB_REPO and contributor_registry.get_active():
+    github_repo = agent_ref.get("github_repo", "")
+    if github_repo and contributor_registry.get_active():
         prompt = (
             f"TASK: GitHub PR scan ONLY. Do NOT touch Aave, do NOT do yield management.\n\n"
-            f"Check the GitHub repo '{GITHUB_REPO}' for recently merged pull requests. "
+            f"Check the GitHub repo '{github_repo}' for recently merged pull requests. "
             f"For each merged PR by a registered contributor that hasn't been paid yet, "
             f"evaluate the work quality, calculate a fair bounty based on their role and effort, "
             f"run the policy check, and if approved, execute the USDT payment via WDK on Polygon. "
@@ -327,6 +329,23 @@ async def wallet_address():
         "What is our wallet address on Polygon? Just return the address, nothing else."
     )
     return result
+
+
+# ── Settings (GitHub repo, etc.) ─────────────────────────────────────
+
+class SettingsRequest(BaseModel):
+    github_repo: str | None = None
+
+@app.get("/api/settings")
+async def get_settings():
+    return {"github_repo": agent_ref["github_repo"]}
+
+@app.put("/api/settings")
+async def update_settings(req: SettingsRequest):
+    if req.github_repo is not None:
+        agent_ref["github_repo"] = req.github_repo
+        audit_log.log("SETTINGS_UPDATED", {"github_repo": req.github_repo})
+    return {"github_repo": agent_ref["github_repo"]}
 
 
 # ── Health ───────────────────────────────────────────────────────────

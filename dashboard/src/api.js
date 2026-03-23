@@ -32,4 +32,8 @@ export const api = {
   enableAuto:      ()          => req('/autonomous/enable', { method: 'POST' }),
   disableAuto:     ()          => req('/autonomous/disable', { method: 'POST' }),
   triggerTick:     ()          => req('/autonomous/trigger', { method: 'POST' }),
+
+  // Settings
+  getSettings:     ()          => req('/settings'),
+  updateSettings:  (data)      => req('/settings', { method: 'PUT', body: JSON.stringify(data) }),
 };
