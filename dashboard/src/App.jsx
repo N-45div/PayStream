@@ -5,7 +5,7 @@ import {
   Plus, X, Play, Pause, ChevronRight, ExternalLink,
   CircleDollarSign, Clock, CheckCircle2, XCircle, AlertTriangle,
   Bot, Loader2, ArrowUpRight, ArrowDownRight, Zap, Power, RefreshCw,
-  Settings, Github,
+  Settings, Github, Mic, MicOff,
 } from 'lucide-react';
 
 // ─── Markdown renderer (lightweight, no deps) ──────────────────────
@@ -137,9 +137,34 @@ function ChatPanel() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
   const endRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const toggleMic = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+    const rec = new SR();
+    rec.lang = 'en-US';
+    rec.interimResults = true;
+    rec.continuous = false;
+    recognitionRef.current = rec;
+    rec.onstart = () => setListening(true);
+    rec.onresult = (e) => {
+      const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+      setInput(transcript);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    rec.start();
+  };
 
   const send = async () => {
     if (!input.trim() || loading) return;
@@ -189,12 +214,22 @@ function ChatPanel() {
       </div>
       <div className="p-3 border-t border-surface-3">
         <div className="flex gap-2">
+          <button onClick={toggleMic} title={listening ? 'Stop listening' : 'Voice input'}
+            className={`rounded-xl px-3 py-2.5 transition-colors border ${
+              listening
+                ? 'bg-red-500/15 border-red-500/30 text-red-400 animate-pulse'
+                : 'bg-surface-2 border-surface-4 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+            }`}>
+            {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && send()}
-            placeholder="e.g. Check Polygon USDT balance..."
-            className="flex-1 bg-surface-2 border border-surface-4 rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-accent/40 transition-colors"
+            placeholder={listening ? 'Listening...' : 'e.g. Check Polygon USDT balance...'}
+            className={`flex-1 bg-surface-2 border rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none transition-colors ${
+              listening ? 'border-red-500/30' : 'border-surface-4 focus:border-accent/40'
+            }`}
           />
           <button onClick={send} disabled={loading || !input.trim()}
             className="bg-accent hover:bg-accent-bright text-surface-0 rounded-xl px-4 py-2.5 font-medium text-sm disabled:opacity-30 transition-colors">
