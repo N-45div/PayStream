@@ -535,7 +535,7 @@ function AutonomousPanel() {
 
 // ─── Main App ───────────────────────────────────────────────────────
 
-export default function App() {
+export default function App({ onBack }) {
   const [health] = usePolling(api.health, 5000);
   const connected = !!health?.status;
 
@@ -545,9 +545,9 @@ export default function App() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-surface-0/80 border-b border-surface-3">
         <div className="max-w-[1440px] mx-auto flex items-center justify-between px-6 h-14">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-emerald-400 flex items-center justify-center">
+            <button onClick={onBack} className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-emerald-400 flex items-center justify-center hover:opacity-80 transition-opacity">
               <CircleDollarSign className="w-4 h-4 text-surface-0" />
-            </div>
+            </button>
             <div>
               <span className="text-sm font-semibold tracking-tight">PayStream</span>
               <span className="text-[11px] text-zinc-500 ml-2">Autonomous Payroll DAO Agent</span>

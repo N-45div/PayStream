@@ -103,18 +103,18 @@ async def _autonomous_tick():
         tick_results.append({"type": "github_scan", "result": result["response"], "tool_calls": result["tool_calls"]})
         audit_log.log("AUTONOMOUS_GITHUB_SCAN", {"tool_calls": result["tool_calls"]})
 
-    # 3. Treasury yield management — check if idle USDT should go to Aave (every 10th tick)
-    if agent_ref["tick_count"] % 10 == 0:
+    # 3. Treasury health check — always run on first tick, then every 5th tick
+    if agent_ref["tick_count"] <= 1 or agent_ref["tick_count"] % 5 == 0:
         prompt = (
-            "Check the treasury USDT balance on Polygon. If the balance is significantly above "
-            "the minimum reserve (more than 2x the min_balance policy), consider supplying the "
-            "excess to Aave V3 on Ethereum to earn yield. If there's already USDT supplied to Aave "
-            "and we need funds for upcoming stream payments, consider withdrawing. "
-            "Report your decision and reasoning."
+            "Give a brief treasury status report. Check USDT balances across all chains "
+            "(polygon, ethereum, arbitrum, solana) and get our wallet addresses. "
+            "If the Polygon balance is significantly above the minimum reserve "
+            "(more than 2x the $10 min_balance), consider supplying excess to Aave V3 "
+            "on Ethereum for yield. Report balances and any actions taken."
         )
         result = await _agent_invoke(prompt)
-        tick_results.append({"type": "yield_management", "result": result["response"], "tool_calls": result["tool_calls"]})
-        audit_log.log("AUTONOMOUS_YIELD_CHECK", {"tool_calls": result["tool_calls"]})
+        tick_results.append({"type": "treasury_check", "result": result["response"], "tool_calls": result["tool_calls"]})
+        audit_log.log("AUTONOMOUS_TREASURY_CHECK", {"tool_calls": result["tool_calls"]})
 
     return tick_results
 
