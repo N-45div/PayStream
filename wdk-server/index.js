@@ -19,6 +19,9 @@ process.stdout.write = function (chunk, encoding, callback) {
   return true;
 };
 
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   WdkMcpServer,
@@ -28,17 +31,36 @@ import {
 } from '@tetherto/wdk-mcp-toolkit';
 import WDK from '@tetherto/wdk';
 import WalletManagerEvm from '@tetherto/wdk-wallet-evm';
+import WalletManagerSolana from '@tetherto/wdk-wallet-solana';
 import AaveProtocolEvm from '@tetherto/wdk-protocol-lending-aave-evm';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SEED_FILE = path.join(__dirname, '.seed');
+
 async function main() {
-  // Auto-generate seed if not provided or invalid (for dev/demo)
+  // Seed resolution order: env var → .seed file → auto-generate + persist
   let seed = process.env.WDK_SEED;
+
   if (!seed || !WDK.isValidSeed(seed)) {
-    const reason = seed ? 'Invalid WDK_SEED provided' : 'No WDK_SEED provided';
-    seed = WDK.getRandomSeedPhrase();
-    console.error(`${reason} — auto-generated a new wallet seed.`);
-    console.error('Save this seed to persist your wallet across restarts:');
-    console.error(`  WDK_SEED="${seed}"`);
+    // Try loading from persisted .seed file
+    try {
+      if (fs.existsSync(SEED_FILE)) {
+        seed = fs.readFileSync(SEED_FILE, 'utf8').trim();
+        if (WDK.isValidSeed(seed)) {
+          console.error('Loaded wallet seed from .seed file');
+        } else {
+          seed = null;
+        }
+      }
+    } catch (_) { seed = null; }
+
+    // Auto-generate and persist if still no valid seed
+    if (!seed || !WDK.isValidSeed(seed)) {
+      seed = WDK.getRandomSeedPhrase();
+      fs.writeFileSync(SEED_FILE, seed, 'utf8');
+      console.error('Auto-generated new wallet seed and saved to .seed file');
+      console.error('This seed will persist across restarts.');
+    }
   }
 
   const server = new WdkMcpServer('paystream-wdk', '1.0.0');
@@ -55,6 +77,11 @@ async function main() {
   });
   server.registerWallet('arbitrum', WalletManagerEvm, {
     provider: process.env.ARB_RPC || 'https://arbitrum.llamarpc.com',
+  });
+
+  // 2b. Register Solana
+  server.registerWallet('solana', WalletManagerSolana, {
+    rpcUrl: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
   });
 
   // 3. Register Aave V3 lending on Ethereum (idle treasury yield)
@@ -76,6 +103,10 @@ async function main() {
     address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
     decimals: 6,
   });
+  server.registerToken('solana', 'USDT', {
+    address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+    decimals: 6,
+  });
 
   // 6. Register all tools (wallet + pricing + lending)
   server.registerTools([
@@ -91,6 +122,7 @@ async function main() {
   console.error('WDK MCP Server running on stdio');
   console.error('Registered chains:', server.getChains());
   console.error('Registered lending protocols:', server.getLendingChains());
+  console.error('Seed persisted:', fs.existsSync(SEED_FILE) ? 'yes (.seed file)' : 'env only');
 }
 
 main().catch((error) => {

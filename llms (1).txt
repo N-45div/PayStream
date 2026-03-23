@@ -1,0 +1,108 @@
+# Wallet Development Kit by Tether
+
+## wdk-docs
+
+- [Welcome](/overview/readme.md): Build secure, multi-chain, self-custodial wallets for any device with minimal effort and infinite scalability
+- [About WDK](/overview/about.md): Learn about the Wallet Development Kit and its capabilities
+- [Our Vision](/overview/vision.md): Our philosophy and vision for the future of wallet development and asset management
+- [Partner with WDK](/overview/partner-program.md): Build with WDK alongside Tether through our partnership tracks
+- [Get Support](/overview/support.md): Need help with WDK? We've got you covered
+- [Changelog](/overview/changelog.md): Updates and improvements to the Wallet Development Kit (WDK) modules and tools.
+- [Showcase](/overview/showcase.md): Explore the projects built by the WDK community showcasing real-world use cases, integrations, and creative implementations using the Wallet Development Kit.
+- [Node.js & Bare Quickstart](/start-building/nodejs-bare-quickstart.md): Get started with WDK in Node.js or Bare runtime environments in 3 minutes
+- [React Native Quickstart](/start-building/react-native-quickstart.md): Get started with WDK in React Native in under 3 minutes
+- [Build with AI](/start-building/build-with-ai.md): Connect your AI coding assistant to WDK documentation for context-aware code generation, architecture guidance, and debugging help.
+- [MCP Toolkit](/ai/mcp-toolkit.md): Build MCP servers that give AI agents self-custodial WDK wallets
+- [Get Started](/ai/mcp-toolkit/get-started.md): Install the MCP Toolkit and run your first AI-powered wallet server
+- [Configuration](/ai/mcp-toolkit/configuration.md): Configure wallets, capabilities, tokens, protocols, and custom tools
+- [API Reference](/ai/mcp-toolkit/api-reference.md): WdkMcpServer class and all 35 built-in MCP tools
+- [Agent Skills](/ai/agent-skills.md): Give any AI agent self-custodial wallet capabilities with WDK agent skills
+- [OpenClaw](/ai/openclaw.md): Give your OpenClaw AI agent a self-custodial WDK wallet in minutes
+- [x402](/ai/x402.md): Accept and make instant USD₮ payments over HTTP using WDK self-custodial wallets
+- [Get Started](/sdk/get-started.md): Learn about the SDK and modules architecture
+- [All Modules](/sdk/all-modules.md): Complete list of all available WDK modules including wallet, swap, bridge, lending, and fiat modules.
+- [Core Module](/sdk/core-module.md): Overview of the @tetherto/wdk-core module
+- [Usage](/sdk/core-module/usage.md): Guide to using the WDK Core module.
+- [Getting Started](/sdk/core-module/usage/getting-started.md): Install and instantiate the WDK Core module.
+- [Register Wallets](/sdk/core-module/usage/wallet-registration.md): Learn how to register wallet modules for different blockchains.
+- [Account Management](/sdk/core-module/usage/account-management.md): Learn how to work with accounts and addresses.
+- [Send Transactions](/sdk/core-module/usage/transactions.md): Learn how to send native tokens on different blockchains.
+- [Protocol Integration](/sdk/core-module/usage/protocol-integration.md): Learn how to use Swaps, Bridges, and Lending protocols.
+- [Middleware](/sdk/core-module/usage/middleware.md): Learn how to intercept and enhance wallet operations with middleware.
+- [Error Handling](/sdk/core-module/usage/error-handling.md): Learn about common errors and best practices.
+- [Configuration](/sdk/core-module/configuration.md): Configuration options and settings for @tetherto/wdk
+- [API Reference](/sdk/core-module/api-reference.md): Complete API documentation for @tetherto/wdk
+- [Wallet Modules](/sdk/wallet-modules.md)
+- [wallet-btc](/sdk/wallet-modules/wallet-btc.md): Overview of the @tetherto/wdk-wallet-btc module
+- [Usage](/sdk/wallet-modules/wallet-btc/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-btc
+- [Configuration](/sdk/wallet-modules/wallet-btc/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-btc
+- [API Reference](/sdk/wallet-modules/wallet-btc/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-btc
+- [wallet-evm](/sdk/wallet-modules/wallet-evm.md): Overview of the @tetherto/wdk-wallet-evm module
+- [Usage](/sdk/wallet-modules/wallet-evm/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-evm
+- [Configuration](/sdk/wallet-modules/wallet-evm/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-evm
+- [API Reference](/sdk/wallet-modules/wallet-evm/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-evm
+- [wallet-evm-erc-4337](/sdk/wallet-modules/wallet-evm-erc-4337.md): Overview of the @tetherto/wdk-wallet-evm-erc-4337 module
+- [Usage](/sdk/wallet-modules/wallet-evm-erc-4337/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-evm-erc-4337
+- [Configuration](/sdk/wallet-modules/wallet-evm-erc-4337/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-evm-erc-4337
+- [API Reference](/sdk/wallet-modules/wallet-evm-erc-4337/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-evm-erc-4337
+- [wallet-solana](/sdk/wallet-modules/wallet-solana.md): Overview of the @tetherto/wdk-wallet-solana module
+- [Usage](/sdk/wallet-modules/wallet-solana/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-solana
+- [Configuration](/sdk/wallet-modules/wallet-solana/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-solana
+- [API Reference](/sdk/wallet-modules/wallet-solana/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-solana
+- [wallet-spark](/sdk/wallet-modules/wallet-spark.md): Overview of the @tetherto/wdk-wallet-spark module
+- [Usage](/sdk/wallet-modules/wallet-spark/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-spark
+- [Configuration](/sdk/wallet-modules/wallet-spark/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-spark
+- [API Reference](/sdk/wallet-modules/wallet-spark/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-spark
+- [wallet-ton](/sdk/wallet-modules/wallet-ton.md): Overview of the @tetherto/wdk-wallet-ton module
+- [Usage](/sdk/wallet-modules/wallet-ton/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-ton
+- [Configuration](/sdk/wallet-modules/wallet-ton/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-ton
+- [API Reference](/sdk/wallet-modules/wallet-ton/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-ton
+- [wallet-ton-gasless](/sdk/wallet-modules/wallet-ton-gasless.md): Overview of the @tetherto/wdk-wallet-ton-gasless module
+- [Usage](/sdk/wallet-modules/wallet-ton-gasless/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-ton-gasless
+- [Configuration](/sdk/wallet-modules/wallet-ton-gasless/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-ton-gasless
+- [API Reference](/sdk/wallet-modules/wallet-ton-gasless/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-ton-gasless
+- [wallet-tron](/sdk/wallet-modules/wallet-tron.md): Overview of the @tetherto/wdk-wallet-tron module
+- [Usage](/sdk/wallet-modules/wallet-tron/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-tron
+- [Configuration](/sdk/wallet-modules/wallet-tron/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-tron
+- [API Reference](/sdk/wallet-modules/wallet-tron/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-tron
+- [wallet-tron-gasfree](/sdk/wallet-modules/wallet-tron-gasfree.md): Overview of the @tetherto/wdk-wallet-tron-gasfree module
+- [Usage](/sdk/wallet-modules/wallet-tron-gasfree/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-wallet-tron-gasfree
+- [Configuration](/sdk/wallet-modules/wallet-tron-gasfree/configuration.md): Configuration options and settings for @tetherto/wdk-wallet-tron-gasfree
+- [API Reference](/sdk/wallet-modules/wallet-tron-gasfree/api-reference.md): Complete API documentation for @tetherto/wdk-wallet-tron-gasfree
+- [Swap Modules](/sdk/swap-modules.md)
+- [swap-velora-evm](/sdk/swap-modules/swap-velora-evm.md): Overview of the @tetherto/wdk-protocol-swap-velora-evm module
+- [Usage](/sdk/swap-modules/swap-velora-evm/usage.md): How to install and use @tetherto/wdk-protocol-swap-velora-evm for swapping tokens on EVM
+- [Configuration](/sdk/swap-modules/swap-velora-evm/configuration.md): Configuration options and settings for @tetherto/wdk-protocol-swap-velora-evm
+- [API Reference](/sdk/swap-modules/swap-velora-evm/api-reference.md): API reference for @tetherto/wdk-protocol-swap-velora-evm
+- [Bridge Modules](/sdk/bridge-modules.md)
+- [bridge-usdt0-evm](/sdk/bridge-modules/bridge-usdt0-evm.md): Overview of the @tetherto/wdk-protocol-bridge-usdt0-evm module
+- [Usage](/sdk/bridge-modules/bridge-usdt0-evm/usage.md): Installation, quick start, and usage examples for @tetherto/wdk-protocol-bridge-usdt0-evm
+- [Configuration](/sdk/bridge-modules/bridge-usdt0-evm/configuration.md): Configuration options and settings for @tetherto/wdk-protocol-bridge-usdt0-evm
+- [API Reference](/sdk/bridge-modules/bridge-usdt0-evm/api-reference.md): Complete API documentation for @tetherto/wdk-protocol-bridge-usdt0-evm
+- [Lending Modules](/sdk/lending-modules.md)
+- [lending-aave-evm](/sdk/lending-modules/lending-aave-evm.md): Overview of the @tetherto/wdk-protocol-lending-aave-evm module
+- [Usage](/sdk/lending-modules/lending-aave-evm/usage.md): How to install and use @tetherto/wdk-protocol-lending-aave-evm on EVM
+- [Configuration](/sdk/lending-modules/lending-aave-evm/configuration.md): Configuration options and settings for @tetherto/wdk-protocol-lending-aave-evm
+- [API Reference](/sdk/lending-modules/lending-aave-evm/api-reference.md): API reference for @tetherto/wdk-protocol-lending-aave-evm
+- [Fiat Modules](/sdk/fiat-modules.md)
+- [fiat-moonpay](/sdk/fiat-modules/fiat-moonpay.md): Overview of the @tetherto/wdk-protocol-fiat-moonpay module
+- [Usage](/sdk/fiat-modules/fiat-moonpay/usage.md): How to use the @tetherto/wdk-protocol-fiat-moonpay module
+- [Configuration](/sdk/fiat-modules/fiat-moonpay/configuration.md): Configuration options for the @tetherto/wdk-protocol-fiat-moonpay module
+- [API Reference](/sdk/fiat-modules/fiat-moonpay/api-reference.md): API Reference for the @tetherto/wdk-protocol-fiat-moonpay module
+- [Community Modules](/sdk/community-modules.md): Explore WDK compatible modules built by the community and learn how to create your own custom modules.
+- [React Native UI Kit](/ui-kits/react-native-ui-kit.md)
+- [Get Started](/ui-kits/react-native-ui-kit/get-started.md): Learn about the WDK React Native UI Kit and how to get started
+- [API Reference](/ui-kits/react-native-ui-kit/api-reference.md): Complete API reference for all WDK React Native UI Kit components
+- [Theming](/ui-kits/react-native-ui-kit/theming.md): Learn how to add your own branding to the UI Kit
+- [React Native Starter (Alpha)](/examples-and-starters/react-native-starter.md): Multi-chain wallet starter built with WDK, Expo, and React Native
+- [Indexer API](/tools/indexer-api.md)
+- [Get Started](/tools/indexer-api/get-started.md): Learn about the WDK Indexer REST API and how to use it
+- [API Reference](/tools/indexer-api/api-reference.md): Complete reference for the WDK Indexer REST API
+- [Secret Manager](/tools/secret-manager.md): Toolkit for secure handling of seed phrases and encrypted payloads
+- [Configuration](/tools/secret-manager/configuration.md): Configure passkey, salt, KDF iterations and runtime options for @tetherto/wdk-secret-manager
+- [API Reference](/tools/secret-manager/api-reference.md): API for @tetherto/wdk-secret-manager
+- [Price Rates](/tools/price-rates.md): Unified pricing tools for fetching current and historical asset prices
+- [Configuration](/tools/price-rates/configuration.md): Configure HTTP pricing clients and providers
+- [API Reference](/tools/price-rates/api-reference.md): API for @tetherto/wdk-pricing-bitfinex-http
+- [Create WDK Module](/tools/create-wdk-module.md): CLI scaffolding tool to generate new WDK wallet and protocol modules with a single command.
+- [Concepts](/resources-and-guides/concepts.md): Key concepts and definitions used throughout the Wallet Development Kit

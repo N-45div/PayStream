@@ -42,6 +42,7 @@ RUN pip install --no-cache-dir -r agent/requirements.txt
 
 # Cloud Run provides PORT env var (default 8080)
 ENV PORT=8080
+ENV SOLANA_RPC=https://api.mainnet-beta.solana.com
 
 EXPOSE 8080
 

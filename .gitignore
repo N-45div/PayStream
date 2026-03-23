@@ -11,6 +11,10 @@ __pycache__/
 # Environment
 .env
 
+# Wallet seed (auto-generated, NEVER commit)
+.seed
+wdk-server/.seed
+
 # Build output
 dist/
 build/

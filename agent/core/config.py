@@ -22,6 +22,7 @@ GITHUB_REPO = os.getenv("GITHUB_REPO", "")
 POLYGON_RPC = os.getenv("POLYGON_RPC", "https://polygon.llamarpc.com")
 ETH_RPC = os.getenv("ETH_RPC", "https://eth.llamarpc.com")
 ARB_RPC = os.getenv("ARB_RPC", "https://arbitrum.llamarpc.com")
+SOLANA_RPC = os.getenv("SOLANA_RPC", "https://api.mainnet-beta.solana.com")
 
 # API
 PORT = int(os.getenv("PORT", "8000"))

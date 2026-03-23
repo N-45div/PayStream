@@ -4,6 +4,8 @@ wdk-server/node_modules
 dashboard/dist
 agent/__pycache__
 agent/.env
+wdk-server/.seed
+.seed
 .git
 .gitignore
 *.md
