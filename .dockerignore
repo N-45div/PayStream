@@ -1,0 +1,9 @@
+node_modules
+dashboard/node_modules
+wdk-server/node_modules
+dashboard/dist
+agent/__pycache__
+agent/.env
+.git
+.gitignore
+*.md

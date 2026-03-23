@@ -5,10 +5,13 @@ import asyncio
 import time
 import traceback
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from core.config import PORT, DEFAULT_POLICY, GITHUB_REPO
@@ -342,6 +345,21 @@ async def health():
             "last_tick_time": agent_ref["last_tick_time"],
         },
     }
+
+
+# ── Static dashboard (production) ────────────────────────────────────
+
+DASHBOARD_DIR = Path(__file__).parent.parent / "dashboard" / "dist"
+if DASHBOARD_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(DASHBOARD_DIR / "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve React SPA — any non-API route returns index.html."""
+        file_path = DASHBOARD_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+        return FileResponse(str(DASHBOARD_DIR / "index.html"))
 
 
 # ── Run ──────────────────────────────────────────────────────────────
