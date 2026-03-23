@@ -28,11 +28,13 @@ import {
   WALLET_TOOLS,
   PRICING_TOOLS,
   LENDING_TOOLS,
+  BRIDGE_TOOLS,
 } from '@tetherto/wdk-mcp-toolkit';
 import WDK from '@tetherto/wdk';
 import WalletManagerEvm from '@tetherto/wdk-wallet-evm';
 import WalletManagerSolana from '@tetherto/wdk-wallet-solana';
 import AaveProtocolEvm from '@tetherto/wdk-protocol-lending-aave-evm';
+import Usdt0ProtocolEvm from '@tetherto/wdk-protocol-bridge-usdt0-evm';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SEED_FILE = path.join(__dirname, '.seed');
@@ -87,6 +89,9 @@ async function main() {
   // 3. Register Aave V3 lending on Ethereum (idle treasury yield)
   server.registerProtocol('ethereum', 'aave', AaveProtocolEvm);
 
+  // 3b. Register USDT0 cross-chain bridge (LayerZero) on Ethereum
+  server.registerProtocol('ethereum', 'usdt0', Usdt0ProtocolEvm);
+
   // 4. Enable pricing (Bitfinex, no API key needed)
   server.usePricing();
 
@@ -113,6 +118,7 @@ async function main() {
     ...WALLET_TOOLS,
     ...PRICING_TOOLS,
     ...LENDING_TOOLS,
+    ...BRIDGE_TOOLS,
   ]);
 
   // 7. Connect via stdio transport (Python agent connects as subprocess)

@@ -89,6 +89,9 @@ WDK MCP Tool usage guide (follow these EXACTLY):
 - quoteTransfer: params = { chain: "polygon", token: "USDT", to: "0xAddr", amount: "1.0" }
 - supply: params = { chain: "ethereum", token: "USDT", amount: "10.0" }
 - withdraw: params = { chain: "ethereum", token: "USDT", amount: "5.0" }
+- bridge: params = { chain: "ethereum", to: "arbitrum", token: "USDT", amount: "10.0" }
+  NOTE: Bridges USDT0 cross-chain via LayerZero. 'chain' is source, 'to' is destination chain.
+- quoteBridge: params = { chain: "ethereum", to: "arbitrum", token: "USDT", amount: "10.0" }
 - getCurrentPrice: params = { symbol: "BTCUSD" }
 Do NOT invent extra parameters. Do NOT pass addresses where amounts go or vice versa.
 """

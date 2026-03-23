@@ -2,7 +2,7 @@
 
 > AI-powered contributor rewards with self-custodial treasury via **Tether WDK**
 
-Built for [Hackathon Galáctica: WDK Edition 1](https://dorahacks.io/hackathon/hackathon-galactica-wdk-2026-01) — **Agent Wallets Track**
+Built for [Hackathon Galáctica: WDK Edition](https://dorahacks.io/hackathon/hackathon-galactica-wdk-2026-01) — **Agent Wallets Track**
 
 ---
 
@@ -13,10 +13,11 @@ Open-source projects and DAOs need to pay contributors. Today this means:
 - No policy enforcement — one bad decision drains the treasury
 - No audit trail — contributors don't know why they were paid (or weren't)
 - Idle treasury capital earns zero yield
+- Cross-chain complexity — contributors on different chains can't get paid easily
 
 ## The Solution
 
-**PayStream** is an autonomous AI agent that manages a contributor payroll treasury end-to-end:
+**PayStream** is a fully autonomous AI agent that manages a multi-chain contributor payroll treasury end-to-end:
 
 ```mermaid
 graph LR
@@ -27,9 +28,10 @@ graph LR
     D -->|Rejected| F[Logged + reason recorded]
     E --> G[Full audit trail on dashboard]
     F --> G
+    E --> H[Bridge cross-chain if needed]
 ```
 
-No human in the loop. The agent decides who gets paid, how much, and when — within policy guardrails you define. Every decision is logged and visible.
+No human in the loop. The agent decides who gets paid, how much, and on which chain — within policy guardrails you define. Every decision is logged and visible.
 
 ---
 
@@ -38,12 +40,13 @@ No human in the loop. The agent decides who gets paid, how much, and when — wi
 ```mermaid
 graph TB
     subgraph Dashboard["React Dashboard :5174"]
-        UI["Chat Console · Contributors · Streams · Policy · Audit"]
+        UI["Chat Console · Contributors · Streams\nPolicy · Audit · Autonomous Loop"]
     end
 
     subgraph Agent["Python Agent :8001"]
         FA["FastAPI Server"]
         LG["LangGraph ReAct Agent"]
+        EL["MCP Elicitation\n(Auto-accept for autonomy)"]
         LLM["OpenRouter LLM\n(Claude / GPT-4 / Llama)"]
         subgraph Core["Core Modules"]
             PE["Policy Engine"]
@@ -51,53 +54,82 @@ graph TB
             SM["Stream Manager"]
             AL["Audit Log"]
         end
-        subgraph Tools["LangChain Tools"]
+        subgraph Tools["LangChain Tools (14)"]
             GH["GitHub Tools"]
             PT["Payroll Tools"]
         end
     end
 
     subgraph WDK["WDK MCP Server (Node.js · stdio)"]
+        SEED["Seed Persistence\n(.seed file auto-gen)"]
         WT["Wallet Tools ×11"]
         PRT["Pricing Tools ×2"]
         LT["Lending Tools ×8"]
+        BT["Bridge Tools ×2"]
     end
 
-    subgraph Chains["EVM Chains"]
+    subgraph Chains["Supported Chains"]
         POL["Polygon — USDT"]
         ETH["Ethereum — USDT"]
         ARB["Arbitrum — USDT"]
+        SOL["Solana — USDT"]
         AAVE["Aave V3 — Yield"]
+        BR["USDT0 Bridge\n(LayerZero cross-chain)"]
     end
 
     UI -->|"REST API"| FA
     FA --> LG
     LG --> LLM
+    LG --> EL
     LG --> Core
     LG --> Tools
-    LG -->|"MCP Protocol (JSON-RPC 2.0)"| WDK
-    WT --> POL & ETH & ARB
+    LG -->|"MCP Protocol\n(JSON-RPC 2.0 / stdio)"| WDK
+    WT --> POL & ETH & ARB & SOL
     LT --> AAVE
+    BT --> BR
 ```
+
+### Component Overview
 
 | Layer | Technology | Responsibility |
 |-------|-----------|----------------|
-| **Dashboard** | React 18 + Tailwind CSS + Vite | Real-time treasury monitoring, agent chat, contributor management |
+| **Dashboard** | React 18 + Tailwind CSS + Vite | Real-time treasury monitoring, agent chat, autonomous loop visibility |
 | **Agent** | Python + LangGraph + FastAPI | AI reasoning, policy enforcement, GitHub monitoring, payroll logic |
-| **WDK MCP** | Node.js + `@tetherto/wdk-mcp-toolkit` | 21 MCP tools — wallet ops, Aave lending, Bitfinex pricing |
-| **Chains** | Polygon, Ethereum, Arbitrum | USDT transfers, Aave V3 yield on idle treasury |
+| **WDK MCP** | Node.js + `@tetherto/wdk-mcp-toolkit` | 23+ MCP tools — wallet, lending, pricing, bridging |
+| **Chains** | Polygon, Ethereum, Arbitrum, **Solana** | USDT transfers, Aave V3 yield, USDT0 cross-chain bridge |
 
-> Full technical deep-dive → [ARCHITECTURE.md](./ARCHITECTURE.md)
+### Autonomous Loop
+
+```mermaid
+sequenceDiagram
+    loop Every 2 minutes
+        Agent->>Agent: Check active payment streams
+        Agent->>Agent: Process due stream payments
+        Agent->>GitHub: Scan for newly merged PRs
+        Agent->>Agent: Evaluate + calculate bounties
+        Agent->>WDK: Execute approved USDT payments
+        Agent->>WDK: Check idle balance vs Aave yield
+        Agent->>Agent: Log all decisions to audit trail
+    end
+```
 
 ---
 
 ## Features
 
 ### Autonomous Agent
-- **LangGraph ReAct** agent with 35 tools (21 MCP + 14 Python)
+- **LangGraph ReAct** agent with 37+ tools (23 MCP + 14 Python)
 - Monitors GitHub for merged PRs, evaluates quality via LLM
 - Calculates fair bounties based on contributor role + effort
-- Creates payment streams without human intervention
+- Creates time-based payment streams without human intervention
+- **MCP elicitation auto-accept** — true autonomy (no human confirmation needed for transfers)
+
+### Multi-Chain Treasury (4 Chains)
+- **Polygon** — low-fee USDT payments (default for payroll)
+- **Ethereum** — USDT + Aave V3 yield on idle treasury
+- **Arbitrum** — fast L2 USDT transfers
+- **Solana** — SPL USDT via WDK Solana wallet module
+- **USDT0 Bridge** — cross-chain transfers via LayerZero
 
 ### Policy Engine
 - **Daily spend cap** — prevents treasury drain
@@ -106,11 +138,11 @@ graph TB
 - **AI approval threshold** — large payments get extra AI scrutiny
 - **Auto-pause on low balance** — self-protective shutdown
 
-### Treasury Management
-- **Multi-chain wallet** via Tether WDK (Polygon + Ethereum + Arbitrum)
-- **Aave V3 yield** on idle USDT — treasury earns while waiting
-- **Live pricing** from Bitfinex — no API key needed
-- **Self-custodial** — private keys never leave the process
+### Self-Custodial Wallet
+- **Auto-generated BIP-39 seed** — persisted to `.seed` file, survives restarts
+- **No manual config needed** — just start the agent and a wallet is created
+- **Private keys never leave the process** — true self-custody
+- **EIP-55 checksummed addresses** enforced for EVM chains
 
 ### Full Audit Trail
 - Every decision logged with timestamp and context
@@ -177,7 +209,7 @@ cd dashboard && npm run dev
 
 Open **http://localhost:5174** → you should see the PayStream dashboard connected.
 
-> **Note:** If `WDK_SEED` is not set, the WDK server auto-generates a BIP-39 seed phrase and logs it. Save it to persist your wallet across restarts.
+> **Note:** The wallet seed is auto-generated on first run and persisted to `wdk-server/.seed`. No manual config needed — your wallet survives restarts automatically.
 
 ---
 
@@ -189,12 +221,13 @@ Create `agent/.env` (see `agent/.env.example`):
 |----------|----------|---------|-------------|
 | `OPENROUTER_API_KEY` | **Yes** | — | LLM API key from [OpenRouter](https://openrouter.ai) |
 | `OPENROUTER_MODEL` | No | `anthropic/claude-3.5-sonnet` | Any model on OpenRouter |
-| `WDK_SEED` | No | Auto-generated | BIP-39 mnemonic for wallet |
+| `WDK_SEED` | No | Auto-generated + persisted | BIP-39 mnemonic for wallet |
 | `GITHUB_TOKEN` | No | — | GitHub PAT for PR monitoring |
 | `GITHUB_REPO` | No | — | Default repo to watch (`owner/repo`) |
-| `POLYGON_RPC` | No | `https://polygon-rpc.com` | Custom Polygon RPC |
-| `ETH_RPC` | No | `https://eth.drpc.org` | Custom Ethereum RPC |
-| `ARB_RPC` | No | `https://arb1.arbitrum.io/rpc` | Custom Arbitrum RPC |
+| `POLYGON_RPC` | No | `https://polygon.llamarpc.com` | Custom Polygon RPC |
+| `ETH_RPC` | No | `https://eth.llamarpc.com` | Custom Ethereum RPC |
+| `ARB_RPC` | No | `https://arbitrum.llamarpc.com` | Custom Arbitrum RPC |
+| `SOLANA_RPC` | No | `https://api.mainnet-beta.solana.com` | Custom Solana RPC |
 | `PORT` | No | `8000` | FastAPI server port |
 
 ---
@@ -207,19 +240,20 @@ sequenceDiagram
     participant UI as PayStream Dashboard
     participant Agent as LangGraph Agent
     participant WDK as WDK MCP Server
-    participant Chain as Polygon
+    participant Chain as Polygon / Solana
 
     Admin->>UI: Register contributor @alice (developer, 0x...)
     UI->>Agent: POST /api/contributors
     Agent-->>UI: ✓ Registered
 
-    Admin->>UI: "Check our Polygon USDT balance"
+    Admin->>UI: "Check all USDT balances"
     UI->>Agent: POST /api/chat
     Agent->>WDK: getTokenBalance(polygon, USDT)
-    WDK->>Chain: eth_call
-    Chain-->>WDK: 500.00 USDT
-    WDK-->>Agent: {balance: "500.00"}
-    Agent-->>UI: "Treasury holds 500.00 USDT on Polygon"
+    Agent->>WDK: getTokenBalance(ethereum, USDT)
+    Agent->>WDK: getTokenBalance(arbitrum, USDT)
+    Agent->>WDK: getTokenBalance(solana, USDT)
+    WDK-->>Agent: Balances across 4 chains
+    Agent-->>UI: "Treasury: 400 USDT (Polygon) + 50 (ETH) + 30 (ARB) + 20 (SOL)"
 
     Admin->>UI: "Review merged PRs and pay contributors"
     UI->>Agent: POST /api/chat
@@ -227,10 +261,11 @@ sequenceDiagram
     Agent->>Agent: AI evaluation: quality 8/10, ~2h effort
     Agent->>Agent: Bounty: 2h × $50/hr = $100
     Agent->>Agent: Policy check: ✓ under limits
-    Agent->>WDK: transfer(polygon, USDT, 0xAlice..., "100")
+    Agent->>WDK: transfer(polygon, USDT, 0xAlice, "100")
+    Note over WDK: Elicitation auto-accepted<br/>(autonomous mode)
     WDK->>Chain: Sign + broadcast tx
     Chain-->>WDK: tx 0xabc...
-    WDK-->>Agent: {hash: "0xabc...", status: "success"}
+    WDK-->>Agent: {hash: "0xabc..."}
     Agent-->>UI: "Paid @alice $100 for PR #42 — tx: 0xabc..."
 ```
 
@@ -241,7 +276,8 @@ sequenceDiagram
 ```
 PayStream/
 ├── wdk-server/                 # Node.js — WDK MCP Server
-│   ├── index.js                # Multi-chain wallet + Aave + pricing (21 tools)
+│   ├── index.js                # Multi-chain wallet + Aave + bridge + pricing
+│   ├── .seed                   # Auto-generated wallet seed (gitignored)
 │   └── package.json
 ├── agent/                      # Python — LangGraph AI Agent
 │   ├── core/
@@ -253,13 +289,13 @@ PayStream/
 │   ├── tools/
 │   │   ├── github_tools.py     # PR monitoring via GitHub API
 │   │   └── payroll_tools.py    # LangChain tools for payroll ops
-│   ├── graph.py                # LangGraph ReAct agent wiring
-│   ├── server.py               # FastAPI REST server
+│   ├── graph.py                # LangGraph ReAct agent + MCP elicitation
+│   ├── server.py               # FastAPI REST server + static dashboard
 │   ├── requirements.txt
 │   └── .env.example
 ├── dashboard/                  # React — Real-time Dashboard
 │   ├── src/
-│   │   ├── App.jsx             # Main UI (5 panels + stats)
+│   │   ├── App.jsx             # Main UI (6 panels + stats)
 │   │   ├── api.js              # API client
 │   │   ├── main.jsx            # Entry point
 │   │   └── index.css           # Tailwind + custom styles
@@ -267,13 +303,14 @@ PayStream/
 │   ├── vite.config.js
 │   ├── tailwind.config.js
 │   └── package.json
+├── Dockerfile                  # Multi-stage: Node + Python + React
 ├── README.md
 └── ARCHITECTURE.md
 ```
 
 ---
 
-## How It Works
+## How It Works — Policy Engine
 
 ```mermaid
 flowchart TD
@@ -286,23 +323,75 @@ flowchart TD
     P3 -->|Yes| P4{Balance − amount ≥ reserve floor?}
     P4 -->|No| P5[Auto-pause agent]
     P5 --> R4[REJECT — low balance]
-    P4 -->|Yes| P6[APPROVE — execute payment via WDK]
-    P6 --> Log[Log to audit trail]
+    P4 -->|Yes| P6[APPROVE — execute via WDK]
+    P6 --> P7{Contributor on same chain?}
+    P7 -->|Yes| TX[Transfer USDT directly]
+    P7 -->|No| BRG[Bridge USDT0 cross-chain]
+    TX & BRG --> Log[Log to audit trail]
     R1 & R2 & R3 & R4 --> Log
 ```
 
+## Wallet Seed Lifecycle
+
+```mermaid
+flowchart LR
+    Start([Agent Starts]) --> A{WDK_SEED env set?}
+    A -->|Yes + Valid| USE[Use env seed]
+    A -->|No / Invalid| B{.seed file exists?}
+    B -->|Yes + Valid| LOAD[Load from .seed file]
+    B -->|No| GEN[Auto-generate BIP-39 seed]
+    GEN --> SAVE[Save to .seed file]
+    SAVE --> USE2[Use generated seed]
+    USE & LOAD & USE2 --> WDK[Initialize WDK wallet]
+    WDK --> CHAINS[Register 4 chains + tokens]
+```
+
 ---
+
 ## Tech Stack
 
 | Component | Technology | Why |
 |-----------|-----------|-----|
 | Wallet | [Tether WDK](https://docs.wdk.tether.io) | Self-custodial, multi-chain, official toolkit |
-| MCP Tools | [WDK MCP Toolkit](https://github.com/tetherto/wdk-mcp-toolkit) | 21 tools — wallet, lending, pricing |
+| MCP Tools | [WDK MCP Toolkit](https://github.com/tetherto/wdk-mcp-toolkit) | 23+ tools — wallet, lending, pricing, bridge |
 | Agent | [LangGraph](https://langchain-ai.github.io/langgraph/) | Production-grade stateful ReAct agent |
 | MCP Bridge | [langchain-mcp-adapters](https://github.com/langchain-ai/langchain-mcp-adapters) | Official LangChain ↔ MCP integration |
 | LLM | [OpenRouter](https://openrouter.ai) | Vendor-agnostic — any model (Claude, GPT-4, Llama) |
 | API | [FastAPI](https://fastapi.tiangolo.com) | Async Python, auto-docs, Pydantic validation |
 | Dashboard | [React](https://react.dev) + [Tailwind CSS](https://tailwindcss.com) | Modern, minimal, production-ready |
+| Chains | Polygon, Ethereum, Arbitrum, Solana | 4-chain USDT + Aave yield + USDT0 bridge |
+| Deploy | Docker + Google Cloud Run | Multi-runtime container (Node + Python) |
+
+---
+
+## WDK Modules Used
+
+| Package | Purpose |
+|---------|--------|
+| `@tetherto/wdk` | Core wallet orchestrator |
+| `@tetherto/wdk-mcp-toolkit` | MCP server with 35 built-in tools |
+| `@tetherto/wdk-wallet-evm` | Polygon, Ethereum, Arbitrum wallets |
+| `@tetherto/wdk-wallet-solana` | Solana wallet (SPL tokens) |
+| `@tetherto/wdk-protocol-lending-aave-evm` | Aave V3 supply/withdraw |
+| `@tetherto/wdk-protocol-bridge-usdt0-evm` | USDT0 cross-chain bridge (LayerZero) |
+
+---
+
+## Deployment
+
+PayStream ships with a multi-stage `Dockerfile` for Google Cloud Run:
+
+```bash
+# Build & deploy to Cloud Run
+gcloud run deploy paystream \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --memory 2Gi --cpu 2 \
+  --set-env-vars "OPENROUTER_API_KEY=...,WDK_SEED=..."
+```
+
+The container bundles Node.js (WDK server) + Python (agent) + built React dashboard. FastAPI serves the static dashboard in production.
 
 ---
 
